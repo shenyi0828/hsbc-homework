@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="me.shenyi0828.mapper.TransactionDataMapper">
+
+    <!-- Result Map for TransactionPO -->
+    <resultMap id="TransactionResultMap" type="me.shenyi0828.model.TransactionPO">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="transaction_id" property="transactionId" jdbcType="VARCHAR"/>
+        <result column="amount" property="amount" jdbcType="INTEGER"/>
+        <result column="transaction_type" property="transactionType" jdbcType="TINYINT"/>
+        <result column="account_number" property="accountNumber" jdbcType="VARCHAR"/>
+        <result column="counterparty_account" property="counterpartyAccount" jdbcType="VARCHAR"/>
+        <result column="description" property="description" jdbcType="VARCHAR"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- Insert transaction -->
+    <insert id="insert" parameterType="me.shenyi0828.model.TransactionPO" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO transactions (
+            transaction_id, amount, transaction_type, account_number, counterparty_account,
+            description, created_at, updated_at
+        ) VALUES (
+            #{transactionId}, #{amount}, #{transactionType}, #{accountNumber}, #{counterpartyAccount},
+            #{description}, NOW(), NOW()
+        )
+    </insert>
+
+    <!-- Delete transaction by transaction ID -->
+    <delete id="deleteByTransactionId" parameterType="java.lang.String">
+        DELETE FROM transactions WHERE transaction_id = #{transactionId}
+    </delete>
+
+    <!-- Update transaction -->
+    <update id="update" parameterType="me.shenyi0828.model.TransactionPO">
+        UPDATE transactions SET
+            amount = #{amount},
+            transaction_type = #{transactionType},
+            description = #{description},
+            updated_at = NOW()
+        WHERE transaction_id = #{transactionId}
+    </update>
+
+    <!-- Find transaction by transaction ID -->
+    <select id="findByTransactionId" parameterType="java.lang.String" resultMap="TransactionResultMap">
+        SELECT id, transaction_id, amount, transaction_type, account_number, counterparty_account,
+               description, created_at, updated_at
+        FROM transactions
+        WHERE transaction_id = #{transactionId}
+    </select>
+
+    <!-- Check if transaction exists by transaction ID -->
+    <select id="existsByTransactionId" parameterType="java.lang.String" resultType="java.lang.Boolean">
+        SELECT COUNT(*) > 0 FROM transactions WHERE transaction_id = #{transactionId}
+    </select>
+
+    <!-- Find all transactions with pagination (optimized for deep pagination) -->
+    <select id="findAllWithPagination" resultMap="TransactionResultMap">
+        SELECT id, transaction_id, amount, transaction_type, account_number, counterparty_account,
+               description, created_at, updated_at
+        FROM transactions
+        WHERE id IN (
+            SELECT id
+            FROM transactions
+            ORDER BY created_at DESC
+            LIMIT #{limit} OFFSET #{offset}
+        )
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- Select all transactions -->
+    <select id="selectAll" resultMap="TransactionResultMap">
+        SELECT id, transaction_id, amount, transaction_type, account_number, counterparty_account,
+               description, created_at, updated_at
+        FROM transactions
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- Count total transactions -->
+    <select id="countTotal" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM transactions
+    </select>
+
+</mapper>
